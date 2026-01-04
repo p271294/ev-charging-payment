@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charging Station Payment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+        
+        .description {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .payment-section {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 5px solid #27ae60;
+        }
+        
+        .payment-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .payment-title i {
+            color: #27ae60;
+            font-size: 2rem;
+        }
+        
+        .payment-button {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 10px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .payment-button:hover {
+            background-color: #219653;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        
+        .payment-button:active {
+            transform: translateY(-1px);
+        }
+        
+        .payment-button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .payment-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 25px 0;
+        }
+        
+        .payment-success {
+            background-color: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .payment-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .payment-failed {
+            background-color: #fadbd8;
+            color: #e74c3c;
+        }
+        
+        footer {
+            margin-top: 40px;
+            color: #95a5a6;
+            font-size: 0.9rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .modal-message {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .modal-button {
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        .modal-button.confirm {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .modal-button.confirm:hover {
+            background-color: #219653;
+        }
+        
+        .modal-button.cancel {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .modal-button.cancel:hover {
+            background-color: #c0392b;
+        }
+        
+        .receipt {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 25px;
+            display: none;
+            text-align: left;
+        }
+        
+        .receipt.active {
+            display: block;
+        }
+        
+        .receipt h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #27ae60;
+            padding-bottom: 10px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
+            
+            .modal-button {
+                width: 100%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>EV Charging Station Payment</h1>
+        
+        <p class="description">
+            Complete your payment for electric vehicle charging at our premium charging station.
+            Fast, secure, and convenient payment process.
+        </p>
+        
+        <div class="payment-section">
+            <div class="payment-title">
+                <i class="fas fa-bolt"></i>
+                Complete Your Charging Payment
+            </div>
+            
+            <div id="paymentStatus" class="payment-status payment-pending">
+                <i class="fas fa-clock"></i> Payment Pending
+            </div>
+            
+            <button id="paymentButton" class="payment-button">
+                <i class="fas fa-credit-card"></i> Make Payment
+            </button>
+            
+            <div id="receipt" class="receipt">
+                <h3><i class="fas fa-receipt"></i> Payment Receipt</h3>
+                <div style="background-color: #e8f6f3; border-radius: 8px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #d1f2eb;">
+                        <span>Transaction ID</span>
+                        <span id="transactionId">TXN-783492</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #d1f2eb;">
+                        <span>Payment Date & Time</span>
+                        <span id="paymentDateTime">Loading...</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #d1f2eb;">
+                        <span>Payment Method</span>
+                        <span>QR Code Payment</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #d1f2eb;">
+                        <span>Payment Status</span>
+                        <span id="receiptStatus">Completed</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 15px 0; margin-top: 10px; border-top: 2px solid #27ae60; font-weight: bold; font-size: 1.2rem; color: #27ae60;">
+                        <span>Payment Successful</span>
+                        <span>✓</span>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 15px; font-style: italic;">
+                    Thank you for choosing our EV charging service!
+                </p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Secure payment processing. Your transaction is protected with end-to-end encryption.</p>
+        </footer>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Confirm Payment</h2>
+            <p class="modal-message">
+                Would you like to confirm the payment?
+            </p>
+            <div class="modal-buttons">
+                <button id="confirmPayment" class="modal-button confirm">Yes</button>
+                <button id="cancelPayment" class="modal-button cancel">No</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isPageAccessed = false;
+        let isPaymentCompleted = false;
+        let paymentTime = null;
+        let transactionId = null;
+        let currentSessionId = null;
+        let sessionStartTime = null;
+        
+        function generateSessionId() {
+            const timestamp = Date.now();
+            const random = Math.floor(Math.random() * 10000);
+            return `SESS-${timestamp}-${random}`;
+        }
+        
+        function generateTransactionId() {
+            const prefix = 'TXN-';
+            const randomNum = Math.floor(100000 + Math.random() * 900000);
+            return prefix + randomNum;
+        }
+        
+        function startNewSession() {
+            currentSessionId = generateSessionId();
+            sessionStartTime = new Date();
+            isPaymentCompleted = false;
+            paymentTime = null;
+            transactionId = null;
+            
+            const sessionData = {
+                sessionId: currentSessionId,
+                startTime: sessionStartTime.toISOString(),
+                paymentCompleted: false
+            };
+            
+            localStorage.setItem('evChargingCurrentSession', JSON.stringify(sessionData));
+            
+            console.log('New session started:', currentSessionId);
+            return currentSessionId;
+        }
+        
+        function checkOrCreateSession() {
+            try {
+                const savedSession = localStorage.getItem('evChargingCurrentSession');
+                
+                if (savedSession) {
+                    const sessionData = JSON.parse(savedSession);
+                    const sessionAge = new Date() - new Date(sessionData.startTime);
+                    const SESSION_TIMEOUT = 30 * 60 * 1000;
+                    
+                    if (sessionAge < SESSION_TIMEOUT) {
+                        currentSessionId = sessionData.sessionId;
+                        sessionStartTime = new Date(sessionData.startTime);
+                        isPaymentCompleted = sessionData.paymentCompleted || false;
+                        return currentSessionId;
+                    } else {
+                        return startNewSession();
+                    }
+                } else {
+                    return startNewSession();
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+                return startNewSession();
+            }
+        }
+        
+        function checkPageAccess() {
+            checkOrCreateSession();
+            isPageAccessed = true;
+            console.log('Page accessed. Session:', currentSessionId);
+            updatePaymentStatus(isPaymentCompleted);
+        }
+        
+        function updatePaymentStatus(isCompleted) {
+            const paymentStatus = document.getElementById('paymentStatus');
+            const paymentButton = document.getElementById('paymentButton');
+            const receipt = document.getElementById('receipt');
+            const receiptStatus = document.getElementById('receiptStatus');
+            const transactionIdElement = document.getElementById('transactionId');
+            const paymentDateTimeElement = document.getElementById('paymentDateTime');
+            
+            if (isCompleted) {
+                paymentStatus.innerHTML = '<i class="fas fa-check-circle"></i> Payment Completed';
+                paymentStatus.className = 'payment-status payment-success';
+                paymentButton.disabled = true;
+                paymentButton.innerHTML = '<i class="fas fa-check"></i> Payment Completed';
+                paymentButton.style.backgroundColor = '#95a5a6';
+                receipt.classList.add('active');
+                
+                if (transactionId) {
+                    transactionIdElement.textContent = transactionId;
+                }
+                
+                if (paymentTime) {
+                    paymentDateTimeElement.textContent = paymentTime.toLocaleString();
+                }
+                
+                receiptStatus.textContent = 'Completed';
+                receiptStatus.style.color = '#27ae60';
+            } else {
+                paymentStatus.innerHTML = '<i class="fas fa-clock"></i> Payment Pending';
+                paymentStatus.className = 'payment-status payment-pending';
+                paymentButton.disabled = false;
+                paymentButton.innerHTML = '<i class="fas fa-credit-card"></i> Make Payment';
+                paymentButton.style.backgroundColor = '#27ae60';
+                receipt.classList.remove('active');
+            }
+        }
+        
+        function showPaymentModal() {
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+        
+        function hidePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+        
+        function processPayment(confirm) {
+            if (confirm) {
+                isPaymentCompleted = true;
+                paymentTime = new Date();
+                transactionId = generateTransactionId();
+                
+                const sessionData = {
+                    sessionId: currentSessionId,
+                    startTime: sessionStartTime.toISOString(),
+                    paymentCompleted: true,
+                    paymentTime: paymentTime.toISOString(),
+                    transactionId: transactionId
+                };
+                
+                localStorage.setItem('evChargingCurrentSession', JSON.stringify(sessionData));
+                updatePaymentStatus(true);
+                
+                setTimeout(() => {
+                    alert('Payment confirmed successfully! Thank you for your transaction.');
+                }, 300);
+            } else {
+                isPaymentCompleted = false;
+                updatePaymentStatus(false);
+            }
+            
+            hidePaymentModal();
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            checkPageAccess();
+            
+            document.getElementById('paymentButton').addEventListener('click', function() {
+                if (!isPaymentCompleted) {
+                    showPaymentModal();
+                }
+            });
+            
+            document.getElementById('confirmPayment').addEventListener('click', function() {
+                processPayment(true);
+            });
+            
+            document.getElementById('cancelPayment').addEventListener('click', function() {
+                processPayment(false);
+            });
+            
+            const modal = document.getElementById('paymentModal');
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    hidePaymentModal();
+                }
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.style.display === 'flex') {
+                    hidePaymentModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
