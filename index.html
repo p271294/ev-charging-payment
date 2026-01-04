@@ -467,39 +467,60 @@
         }
         
 		// ============================================
-		// API ENDPOINT FOR NODE-RED TO CONSUME
+		// SIMPLE STATUS EXPOSURE FOR NODE-RED
 		// ============================================
 
-		// Function to get current status (consumable by Node-RED)
-		function getEVStatusAPI() {
-			return {
-				status: "success",
-				timestamp: new Date().toISOString(),
-				data: {
-					isPageAccessed: isPageAccessed,
-					isPaymentCompleted: isPaymentCompleted,
-					sessionId: currentSessionId,
-					paymentTime: paymentTime,
-					transactionId: transactionId
-				}
-			};
+		// Create a hidden div with current status that Node-RED can scrape
+		function updateStatusDisplay() {
+			// Create or update status display element
+			let statusDiv = document.getElementById('nodered-status');
+			
+			if (!statusDiv) {
+				statusDiv = document.createElement('div');
+				statusDiv.id = 'nodered-status';
+				statusDiv.style.cssText = `
+					position: absolute;
+					left: -9999px;
+					top: -9999px;
+					width: 1px;
+					height: 1px;
+					overflow: hidden;
+					opacity: 0;
+				`;
+				document.body.appendChild(statusDiv);
+			}
+			
+			// Update with current status in SIMPLE text format
+			statusDiv.innerHTML = `
+		isPageAccessed:${isPageAccessed}
+		isPaymentCompleted:${isPaymentCompleted}
+		sessionId:${currentSessionId}
+		lastUpdate:${new Date().toISOString()}
+		url:${window.location.href}
+			`.trim();
 		}
 
-		// Make it available globally for Node-RED consumption
-		window.getEVStatus = getEVStatusAPI;
+		// Update status when page loads
+		setTimeout(updateStatusDisplay, 1000);
 
-		// Create a simple status endpoint via URL fragment
-		if (window.location.hash === '#status') {
-			document.addEventListener('DOMContentLoaded', function() {
-				// Return status as JSON when accessed with #status
-				document.body.innerHTML = JSON.stringify(getEVStatusAPI(), null, 2);
-				document.body.style.fontFamily = 'monospace';
-				document.body.style.whiteSpace = 'pre';
-			});
-		}
+		// Update status when variables change
+		const originalCheckPageAccess = checkPageAccess;
+		checkPageAccess = function() {
+			originalCheckPageAccess();
+			setTimeout(updateStatusDisplay, 500);
+		};
+
+		const originalProcessPayment = processPayment;
+		processPayment = function(confirm) {
+			originalProcessPayment(confirm);
+			setTimeout(updateStatusDisplay, 500);
+		};
+
+		// Update status every 30 seconds (in case Node-RED checks later)
+		setInterval(updateStatusDisplay, 30000);
 
 		// ============================================
-		// END OF API CODE
+		// END OF NODE-RED INTEGRATION
 		// ============================================
 		
         document.addEventListener('DOMContentLoaded', function() {
