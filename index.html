@@ -329,29 +329,6 @@
         let transactionId = null;
         let currentSessionId = null;
         let sessionStartTime = null;
-		
-		// ============================================
-		// MAKE VARIABLES AVAILABLE FOR NODE-RED
-		// ============================================
-
-		// Expose variables globally so Node-RED can read them
-		window.evChargingStatus = {
-			isPageAccessed: false,
-			isPaymentCompleted: false,
-			sessionId: null,
-			lastUpdate: null
-		};
-
-		// Update function for Node-RED to call
-		window.updateEVStatus = function() {
-			return {
-				isPageAccessed: isPageAccessed,
-				isPaymentCompleted: isPaymentCompleted,
-				sessionId: currentSessionId,
-				timestamp: new Date().toISOString(),
-				pageUrl: window.location.href
-			};
-		};
         
         function generateSessionId() {
             const timestamp = Date.now();
@@ -489,6 +466,42 @@
             hidePaymentModal();
         }
         
+		// ============================================
+		// API ENDPOINT FOR NODE-RED TO CONSUME
+		// ============================================
+
+		// Function to get current status (consumable by Node-RED)
+		function getEVStatusAPI() {
+			return {
+				status: "success",
+				timestamp: new Date().toISOString(),
+				data: {
+					isPageAccessed: isPageAccessed,
+					isPaymentCompleted: isPaymentCompleted,
+					sessionId: currentSessionId,
+					paymentTime: paymentTime,
+					transactionId: transactionId
+				}
+			};
+		}
+
+		// Make it available globally for Node-RED consumption
+		window.getEVStatus = getEVStatusAPI;
+
+		// Create a simple status endpoint via URL fragment
+		if (window.location.hash === '#status') {
+			document.addEventListener('DOMContentLoaded', function() {
+				// Return status as JSON when accessed with #status
+				document.body.innerHTML = JSON.stringify(getEVStatusAPI(), null, 2);
+				document.body.style.fontFamily = 'monospace';
+				document.body.style.whiteSpace = 'pre';
+			});
+		}
+
+		// ============================================
+		// END OF API CODE
+		// ============================================
+		
         document.addEventListener('DOMContentLoaded', function() {
             checkPageAccess();
             
