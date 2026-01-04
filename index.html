@@ -329,6 +329,29 @@
         let transactionId = null;
         let currentSessionId = null;
         let sessionStartTime = null;
+		
+		// ============================================
+		// MAKE VARIABLES AVAILABLE FOR NODE-RED
+		// ============================================
+
+		// Expose variables globally so Node-RED can read them
+		window.evChargingStatus = {
+			isPageAccessed: false,
+			isPaymentCompleted: false,
+			sessionId: null,
+			lastUpdate: null
+		};
+
+		// Update function for Node-RED to call
+		window.updateEVStatus = function() {
+			return {
+				isPageAccessed: isPageAccessed,
+				isPaymentCompleted: isPaymentCompleted,
+				sessionId: currentSessionId,
+				timestamp: new Date().toISOString(),
+				pageUrl: window.location.href
+			};
+		};
         
         function generateSessionId() {
             const timestamp = Date.now();
